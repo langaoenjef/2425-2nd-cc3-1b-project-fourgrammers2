@@ -1,12 +1,16 @@
 package main.java.com.pennypal.view;
 
 import javax.swing.*;
+
+import main.java.com.pennypal.viewmodel.HomeViewModel;
+import main.java.com.pennypal.storage.StorageManager;
 import java.awt.*;
 
 public class FinanceAppGUI {
     private JFrame frame;
     private JPanel contentPanel;
     private CardLayout cardLayout;
+    private HomeView homeView; // 🔁 Store reference to HomeView
 
     public FinanceAppGUI() {
         frame = new JFrame("Penny - Expense Tracker");
@@ -28,14 +32,45 @@ public class FinanceAppGUI {
         Color cardColor = Color.WHITE;
         Color dividerColor = new Color(224, 224, 224);
 
+        // Create view model and load data
+        HomeViewModel homeViewModel = new HomeViewModel();
+        StorageManager.load(homeViewModel);
+
         // Create views
-        HomeView homeView = new HomeView(cardLayout, contentPanel, 1000.0,
+        homeView = new HomeView(cardLayout, contentPanel, homeViewModel, // 🔁 stored
                 primaryColor, accentColor, textColor, darkTextColor,
                 backgroundColor, cardColor, dividerColor, primaryDark);
 
-        HomeAddTransactionView addTransactionView = new HomeAddTransactionView(cardLayout, contentPanel,
-                primaryColor, primaryDark, primaryLight, accentColor, textColor,
-                darkTextColor, backgroundColor, cardColor);
+        HomeAddTransactionView addTransactionView = new HomeAddTransactionView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, primaryDark, primaryLight,
+                accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor
+        );
+
+        HomeAddIncomeView addIncomeView = new HomeAddIncomeView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor, dividerColor, primaryDark
+        );
+
+        HomeAddExpenseView addExpenseView = new HomeAddExpenseView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor, dividerColor, primaryDark
+        );
+
+        HomeSetLimitView setLimitView = new HomeSetLimitView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor, dividerColor, primaryDark
+        );
+
+        HomeExpenseView expenseView = new HomeExpenseView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor, dividerColor, primaryDark
+        );
 
         StatisticView statisticView = new StatisticView(backgroundColor, cardColor, darkTextColor, primaryDark);
         NotificationView notificationView = new NotificationView(backgroundColor, cardColor, darkTextColor, dividerColor, accentColor);
@@ -45,6 +80,10 @@ public class FinanceAppGUI {
         // Add panels to CardLayout
         contentPanel.add(homeView.getPanel(), "Home");
         contentPanel.add(addTransactionView.getPanel(), "AddOptions");
+        contentPanel.add(addIncomeView.getPanel(), "AddIncome");
+        contentPanel.add(addExpenseView.getPanel(), "AddExpense");
+        contentPanel.add(setLimitView.getPanel(), "SetLimit");
+        contentPanel.add(expenseView.getPanel(), "ExpenseDetails");
         contentPanel.add(statisticView.getPanel(), "Statistics");
         contentPanel.add(notificationView.getPanel(), "Notification");
         contentPanel.add(scheduleView.getPanel(), "Schedule");
@@ -69,7 +108,12 @@ public class FinanceAppGUI {
             button.setFocusPainted(false);
             button.setContentAreaFilled(false);
             button.setBorderPainted(false);
-            button.addActionListener(e -> cardLayout.show(contentPanel, view));
+            button.addActionListener(e -> {
+                if (view.equals("Home")) {
+                    homeView.refresh(); // ✅ Refresh before showing
+                }
+                cardLayout.show(contentPanel, view);
+            });
             navBar.add(button);
         }
         return navBar;

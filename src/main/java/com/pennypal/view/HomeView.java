@@ -1,23 +1,45 @@
 package main.java.com.pennypal.view;
 
+import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.text.NumberFormat;
+import java.util.List;
+import java.util.Locale;
+
+import main.java.com.pennypal.viewmodel.HomeViewModel;
+import main.java.com.pennypal.model.Expense;
+import main.java.com.pennypal.model.Income;
 
 public class HomeView {
+    private Consumer<Expense> expenseClickListener;
+
     private JPanel panel;
     private JLabel balanceLabel;
-    private double balance;
+    private JLabel limitLabel;
+    private JLabel summaryLabel;
+    private JPanel transactionsPanel;
     private CardLayout cardLayout;
     private JPanel contentPanel;
-    private Color primaryColor, accentColor, textColor, darkTextColor, backgroundColor, cardColor, dividerColor, primaryDark;
+    private HomeViewModel viewModel;
+    private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "PH"));
 
-    public HomeView(CardLayout cardLayout, JPanel contentPanel, double balance, Color primaryColor, Color accentColor,
-                    Color textColor, Color darkTextColor, Color backgroundColor, Color cardColor, Color dividerColor, Color primaryDark) {
+    private Color primaryColor, accentColor, textColor, darkTextColor;
+    private Color backgroundColor, cardColor, dividerColor, primaryDark;
+
+    private JButton expenseTab;
+    private JButton incomeTab;
+    private boolean showingExpenses = true;
+
+    public HomeView(CardLayout cardLayout, JPanel contentPanel, HomeViewModel homeViewModel,
+                    Color primaryColor, Color accentColor, Color textColor, Color darkTextColor,
+                    Color backgroundColor, Color cardColor, Color dividerColor, Color primaryDark) {
         this.cardLayout = cardLayout;
         this.contentPanel = contentPanel;
-        this.balance = balance;
+        this.viewModel = homeViewModel;
+
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.textColor = textColor;
@@ -34,102 +56,145 @@ public class HomeView {
         return panel;
     }
 
+    public void updateView() {
+        balanceLabel.setText(currencyFormat.format(viewModel.getTotalBalance()));
+        limitLabel.setText("Limit: " + (viewModel.hasLimit() ? currencyFormat.format(viewModel.getLimitAmount()) + " (" + viewModel.getLimitType() + ")" : "Not set"));
+
+        summaryLabel.setText("Today: " + currencyFormat.format(viewModel.getTotalExpenseToday()) +
+                " | This Week: " + currencyFormat.format(viewModel.getTotalExpenseThisWeek()) +
+                " | This Month: " + currencyFormat.format(viewModel.getTotalExpenseThisMonth()));
+
+        transactionsPanel.removeAll();
+
+        if (showingExpenses) {
+            for (Expense expense : viewModel.getRecentExpenses()) {
+                transactionsPanel.add(createExpenseItem(expense));
+                transactionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        } else {
+            for (Income income : viewModel.getRecentIncomes()) {
+                transactionsPanel.add(createIncomeItem(income));
+                transactionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        }
+
+        transactionsPanel.revalidate();
+        transactionsPanel.repaint();
+    }
+
+    public void setExpenseClickListener(Consumer<Expense> listener) {
+        this.expenseClickListener = listener;
+    }    
+
     private JPanel createHomePanel() {
         JPanel home = new JPanel(new BorderLayout());
-        home.setBackground(backgroundColor);
 
-        // Balance display
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.setBackground(primaryColor);
-        topPanel.setBorder(new EmptyBorder(20, 0, 30, 0));
+        topPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 
         JLabel balanceTitle = new JLabel("CURRENT BALANCE", SwingConstants.CENTER);
         balanceTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
-        balanceTitle.setForeground(new Color(255, 255, 255, 220));
+        balanceTitle.setForeground(textColor);
+        balanceTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        balanceLabel = new JLabel(String.format("$%.2f", balance), SwingConstants.CENTER);
+        balanceLabel = new JLabel(currencyFormat.format(viewModel.getTotalBalance()), SwingConstants.CENTER);
         balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 36));
         balanceLabel.setForeground(textColor);
+        balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        topPanel.add(balanceTitle, BorderLayout.NORTH);
-        topPanel.add(balanceLabel, BorderLayout.CENTER);
+        limitLabel = new JLabel("", SwingConstants.CENTER);
+        limitLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        limitLabel.setForeground(textColor);
+        limitLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        summaryLabel = new JLabel("", SwingConstants.CENTER);
+        summaryLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        summaryLabel.setForeground(textColor);
+        summaryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        topPanel.add(balanceTitle);
+        topPanel.add(balanceLabel);
+        topPanel.add(Box.createVerticalStrut(5));
+        topPanel.add(limitLabel);
+        topPanel.add(Box.createVerticalStrut(5));
+        topPanel.add(summaryLabel);
+
         home.add(topPanel, BorderLayout.NORTH);
 
-        // Transactions
-        JPanel transactionsPanel = new JPanel();
+        transactionsPanel = new JPanel();
         transactionsPanel.setLayout(new BoxLayout(transactionsPanel, BoxLayout.Y_AXIS));
         transactionsPanel.setBackground(cardColor);
-        transactionsPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, dividerColor),
-            new EmptyBorder(10, 15, 10, 15)
-        ));
+        transactionsPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
 
-        JLabel recentLabel = new JLabel("RECENT TRANSACTIONS", SwingConstants.LEFT);
-        recentLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        recentLabel.setForeground(darkTextColor);
-        recentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        transactionsPanel.add(recentLabel);
-        transactionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        expenseTab = new JButton("Recent Expenses");
+        incomeTab = new JButton("Recent Income");
 
-        transactionsPanel.add(createTransactionItem("Food", "May 15", -12.50));
+        expenseTab.addActionListener(e -> {
+            showingExpenses = true;
+            updateView();
+        });
+        incomeTab.addActionListener(e -> {
+            showingExpenses = false;
+            updateView();
+        });
+
+        JPanel tabPanel = new JPanel(new GridLayout(1, 2));
+        tabPanel.setBackground(backgroundColor);
+        tabPanel.add(expenseTab);
+        tabPanel.add(incomeTab);
+
+        JLabel sectionLabel = new JLabel(" ");
+        sectionLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        sectionLabel.setForeground(darkTextColor);
+
+        transactionsPanel.add(sectionLabel);
         transactionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        transactionsPanel.add(createTransactionItem("Salary", "May 1", 1200.00));
-        transactionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        transactionsPanel.add(createTransactionItem("Transport", "May 10", -25.00));
 
         JScrollPane scrollPane = new JScrollPane(transactionsPanel);
         scrollPane.setBorder(null);
-        home.add(scrollPane, BorderLayout.CENTER);
 
-        // Add transaction button
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setBackground(cardColor);
+        centerWrapper.add(tabPanel, BorderLayout.NORTH);
+        centerWrapper.add(scrollPane, BorderLayout.CENTER);
+
+        home.add(centerWrapper, BorderLayout.CENTER);
+
         JButton addButton = new JButton("+");
         addButton.setFont(new Font("SansSerif", Font.BOLD, 30));
-        addButton.setForeground(textColor);
         addButton.setBackground(accentColor);
+        addButton.setForeground(darkTextColor);
         addButton.setFocusPainted(false);
         addButton.setBorder(BorderFactory.createEmptyBorder());
         addButton.setPreferredSize(new Dimension(70, 70));
         addButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        addButton.setBorderPainted(false);
-        addButton.setOpaque(true);
-        addButton.setContentAreaFilled(true);
         addButton.addActionListener(e -> cardLayout.show(contentPanel, "AddOptions"));
 
-        JLayeredPane layeredPane = new JLayeredPane();
-        layeredPane.setPreferredSize(new Dimension(70, 70));
-        layeredPane.setLayout(null);
-        addButton.setBounds(0, 0, 70, 70);
-        layeredPane.add(addButton, JLayeredPane.POPUP_LAYER);
-
-        JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonContainer.setBackground(new Color(0, 0, 0, 0));
-        buttonContainer.add(layeredPane);
-
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(0, 0, 0, 0));
-        bottomPanel.setBorder(new EmptyBorder(0, 0, 20, 0));
-        bottomPanel.add(buttonContainer, BorderLayout.CENTER);
+        bottomPanel.add(addButton);
 
         home.add(bottomPanel, BorderLayout.SOUTH);
-
         return home;
     }
 
-    private JPanel createTransactionItem(String category, String date, double amount) {
+    private JPanel createExpenseItem(Expense expense) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(cardColor);
         panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
-            new EmptyBorder(10, 0, 10, 0)
+                BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
+                new EmptyBorder(10, 0, 10, 0)
         ));
 
-        JLabel categoryLabel = new JLabel(category);
+        JLabel categoryLabel = new JLabel(expense.getName());
         categoryLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         categoryLabel.setForeground(darkTextColor);
 
-        JLabel dateLabel = new JLabel(date);
+        JLabel dateLabel = new JLabel(expense.getDate());
         dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        dateLabel.setForeground(new Color(0, 0, 0, 150));
+        dateLabel.setForeground(darkTextColor);
 
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
@@ -137,13 +202,71 @@ public class HomeView {
         leftPanel.add(categoryLabel);
         leftPanel.add(dateLabel);
 
-        JLabel amountLabel = new JLabel(String.format("$%.2f", amount));
+        JLabel amountLabel = new JLabel(currencyFormat.format(expense.getAmount()));
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        amountLabel.setForeground(amount < 0 ? new Color(244, 67, 54) : new Color(76, 175, 80));
+        amountLabel.setForeground(new Color(244, 67, 54));
 
         panel.add(leftPanel, BorderLayout.WEST);
         panel.add(amountLabel, BorderLayout.EAST);
 
+        panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (expenseClickListener != null) {
+                    expenseClickListener.accept(expense);
+                } else {
+                    viewModel.setSelectedExpense(expense);
+                    cardLayout.show(contentPanel, "ExpenseDetails");
+                }
+            }
+        });        
         return panel;
     }
+
+    private JPanel createIncomeItem(Income income) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(cardColor);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
+                new EmptyBorder(10, 0, 10, 0)
+        ));
+
+        JLabel sourceLabel = new JLabel(income.getName());
+        sourceLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        sourceLabel.setForeground(darkTextColor);
+
+        JLabel dateLabel = new JLabel(income.getDate());
+        dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        dateLabel.setForeground(darkTextColor);
+
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setBackground(cardColor);
+        leftPanel.add(sourceLabel);
+        leftPanel.add(dateLabel);
+
+        JLabel amountLabel = new JLabel(currencyFormat.format(income.getAmount()));
+        amountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        amountLabel.setForeground(new Color(76, 175, 80));
+
+        panel.add(leftPanel, BorderLayout.WEST);
+        panel.add(amountLabel, BorderLayout.EAST);
+
+        panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                viewModel.setSelectedIncome(income);
+                cardLayout.show(contentPanel, "IncomeDetails");
+            }
+        });
+
+        return panel;
+    }
+
+    public void refresh() {
+        updateView();
+    }
+    
 }
