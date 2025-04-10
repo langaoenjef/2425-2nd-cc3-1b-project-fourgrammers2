@@ -9,12 +9,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.stream.Collectors;
 
 public class HomeViewModel {
     private Home data;
@@ -23,12 +20,23 @@ public class HomeViewModel {
     private static final String DATA_FILE = "data.json";
     private Gson gson = new Gson();
 
+    public void copyFrom(HomeViewModel other) {
+        if (other == null || other.data == null) return;
+        this.data = other.data;
+        this.selectedExpense = other.selectedExpense;
+    }
+    
+
     public HomeViewModel() {
         loadData();
         if (data == null) {
             this.data = new Home();
         }
     }
+
+    public HomeViewModel(Home data) {
+        this.data = (data != null) ? data : new Home();
+    }    
 
     public Home getData() {
         return data;
@@ -39,46 +47,37 @@ public class HomeViewModel {
     }
 
     public void addIncome(Income income) {
-        data.getIncomes().add(income);
+        data.getIncomes().add(0, income); // 🔁 add at index 0
         data.setBalance(data.getBalance() + income.getAmount());
         saveData();
-    }
+    }    
 
     public void addIncome(double amount, String date) {
         Income income = new Income(amount, date);
         addIncome(income);
     }
 
-    public void addExpense(String name, double amount) {
-        addExpense(name, amount, java.time.LocalDate.now().toString());
-    }
-
-    public void addExpense(String name, double amount, String date) {
-        Expense expense = new Expense(name, amount, date);
+    public void addExpense(String name, double amount, String date, String time, String category, String description) {
+        Expense expense = new Expense(name, amount, date, time, category, description);
         data.getExpenses().add(0, expense);
         data.setBalance(data.getBalance() - amount);
         saveData();
-    }
+    }    
 
     public void addExpense(Expense expense) {
         data.getExpenses().add(0, expense);
         data.setBalance(data.getBalance() - expense.getAmount());
         saveData();
-    }
-    
+    }    
 
     public List<Expense> getRecentExpenses() {
-        List<Expense> allExpenses = data.getExpenses();
-        int fromIndex = Math.max(allExpenses.size() - 3, 0);
-        return allExpenses.subList(fromIndex, allExpenses.size());
+        return data.getExpenses(); // returns all expenses in order
     }
-
+    
     public List<Income> getRecentIncomes() {
-        List<Income> allIncomes = data.getIncomes();
-        int fromIndex = Math.max(allIncomes.size() - 3, 0);
-        return allIncomes.subList(fromIndex, allIncomes.size());
+        return data.getIncomes(); // returns all incomes in order
     }
-
+    
     public void setLimit(Limit limit) {
         data.setLimit(limit);
         saveData();
@@ -86,10 +85,6 @@ public class HomeViewModel {
 
     public Limit getLimit() {
         return data.getLimit();
-    }
-
-    public double getTotalBalance() {
-        return data.getBalance();
     }
 
     public boolean hasLimit() {
@@ -115,76 +110,105 @@ public class HomeViewModel {
     }
 
     public void setSpendingLimit(double amount, String type) {
-        this.data.setLimit(new Limit(amount, type));
+        data.setLimit(new Limit(amount, type));
         saveData();
     }
 
     public double getTotalExpenseToday() {
         LocalDate today = LocalDate.now();
         return data.getExpenses().stream()
-                .filter(expense -> LocalDate.parse(expense.getDate()).isEqual(today))
+                .filter(expense -> {
+                    try {
+                        return LocalDate.parse(expense.getDate()).isEqual(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-
+    
     public double getTotalExpenseThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
         return data.getExpenses().stream()
                 .filter(expense -> {
-                    LocalDate date = LocalDate.parse(expense.getDate());
-                    return !date.isBefore(startOfWeek) && !date.isAfter(today);
+                    try {
+                        LocalDate date = LocalDate.parse(expense.getDate());
+                        return !date.isBefore(startOfWeek) && !date.isAfter(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
                 })
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-
+    
     public double getTotalExpenseThisMonth() {
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
         return data.getExpenses().stream()
                 .filter(expense -> {
-                    LocalDate date = LocalDate.parse(expense.getDate());
-                    return !date.isBefore(firstDayOfMonth) && !date.isAfter(today);
+                    try {
+                        LocalDate date = LocalDate.parse(expense.getDate());
+                        return !date.isBefore(firstDayOfMonth) && !date.isAfter(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
                 })
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-
+    
     public double getTotalIncomeToday() {
         LocalDate today = LocalDate.now();
         return data.getIncomes().stream()
-                .filter(income -> LocalDate.parse(income.getDate()).isEqual(today))
+                .filter(income -> {
+                    try {
+                        return LocalDate.parse(income.getDate()).isEqual(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
                 .mapToDouble(Income::getAmount)
                 .sum();
     }
-
+    
     public double getTotalIncomeThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
         return data.getIncomes().stream()
                 .filter(income -> {
-                    LocalDate date = LocalDate.parse(income.getDate());
-                    return !date.isBefore(startOfWeek) && !date.isAfter(today);
+                    try {
+                        LocalDate date = LocalDate.parse(income.getDate());
+                        return !date.isBefore(startOfWeek) && !date.isAfter(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
                 })
                 .mapToDouble(Income::getAmount)
                 .sum();
     }
-
+    
     public double getTotalIncomeThisMonth() {
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
         return data.getIncomes().stream()
                 .filter(income -> {
-                    LocalDate date = LocalDate.parse(income.getDate());
-                    return !date.isBefore(firstDayOfMonth) && !date.isAfter(today);
+                    try {
+                        LocalDate date = LocalDate.parse(income.getDate());
+                        return !date.isBefore(firstDayOfMonth) && !date.isAfter(today);
+                    } catch (Exception e) {
+                        return false;
+                    }
                 })
                 .mapToDouble(Income::getAmount)
                 .sum();
-    }
+    }    
 
     public void setSelectedIncome(Income income) {
         data.setSelectedIncome(income);
+        saveData();
     }
 
     public Income getSelectedIncome() {

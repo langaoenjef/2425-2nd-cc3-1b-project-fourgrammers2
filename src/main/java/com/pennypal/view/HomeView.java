@@ -57,7 +57,7 @@ public class HomeView {
     }
 
     public void updateView() {
-        balanceLabel.setText(currencyFormat.format(viewModel.getTotalBalance()));
+        balanceLabel.setText(currencyFormat.format(viewModel.getBalance()));
         limitLabel.setText("Limit: " + (viewModel.hasLimit() ? currencyFormat.format(viewModel.getLimitAmount()) + " (" + viewModel.getLimitType() + ")" : "Not set"));
 
         summaryLabel.setText("Today: " + currencyFormat.format(viewModel.getTotalExpenseToday()) +
@@ -84,7 +84,7 @@ public class HomeView {
 
     public void setExpenseClickListener(Consumer<Expense> listener) {
         this.expenseClickListener = listener;
-    }    
+    }
 
     private JPanel createHomePanel() {
         JPanel home = new JPanel(new BorderLayout());
@@ -99,7 +99,7 @@ public class HomeView {
         balanceTitle.setForeground(textColor);
         balanceTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        balanceLabel = new JLabel(currencyFormat.format(viewModel.getTotalBalance()), SwingConstants.CENTER);
+        balanceLabel = new JLabel(currencyFormat.format(viewModel.getBalance()), SwingConstants.CENTER);
         balanceLabel.setFont(new Font("SansSerif", Font.BOLD, 36));
         balanceLabel.setForeground(textColor);
         balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -185,29 +185,33 @@ public class HomeView {
         panel.setBackground(cardColor);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
-                new EmptyBorder(10, 0, 10, 0)
+                new EmptyBorder(10, 10, 10, 10)
         ));
 
-        JLabel categoryLabel = new JLabel(expense.getName());
-        categoryLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        categoryLabel.setForeground(darkTextColor);
+        JLabel nameLabel = new JLabel(expense.getName());
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        nameLabel.setForeground(darkTextColor);
 
-        JLabel dateLabel = new JLabel(expense.getDate());
-        dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        dateLabel.setForeground(darkTextColor);
+        JLabel subLabel = new JLabel(expense.getCategory() + " • " + expense.getDate());
+        subLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        subLabel.setForeground(darkTextColor);
 
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(cardColor);
-        leftPanel.add(categoryLabel);
-        leftPanel.add(dateLabel);
+        leftPanel.add(nameLabel);
+        leftPanel.add(subLabel);
 
         JLabel amountLabel = new JLabel(currencyFormat.format(expense.getAmount()));
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         amountLabel.setForeground(new Color(244, 67, 54));
 
-        panel.add(leftPanel, BorderLayout.WEST);
-        panel.add(amountLabel, BorderLayout.EAST);
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(cardColor);
+        content.add(leftPanel, BorderLayout.CENTER);
+        content.add(amountLabel, BorderLayout.EAST);
+
+        panel.add(content, BorderLayout.CENTER);
 
         panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         panel.addMouseListener(new MouseAdapter() {
@@ -220,7 +224,8 @@ public class HomeView {
                     cardLayout.show(contentPanel, "ExpenseDetails");
                 }
             }
-        });        
+        });
+
         return panel;
     }
 
@@ -229,30 +234,34 @@ public class HomeView {
         panel.setBackground(cardColor);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
-                new EmptyBorder(10, 0, 10, 0)
+                new EmptyBorder(10, 10, 10, 10)
         ));
-
-        JLabel sourceLabel = new JLabel(income.getName());
-        sourceLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        sourceLabel.setForeground(darkTextColor);
-
-        JLabel dateLabel = new JLabel(income.getDate());
-        dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        dateLabel.setForeground(darkTextColor);
-
+    
+        JLabel nameLabel = new JLabel(income.getName());
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        nameLabel.setForeground(darkTextColor);
+    
+        JLabel subLabel = new JLabel(income.getDate());  // only date
+        subLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        subLabel.setForeground(darkTextColor);
+    
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(cardColor);
-        leftPanel.add(sourceLabel);
-        leftPanel.add(dateLabel);
-
+        leftPanel.add(nameLabel);
+        leftPanel.add(subLabel);
+    
         JLabel amountLabel = new JLabel(currencyFormat.format(income.getAmount()));
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        amountLabel.setForeground(new Color(76, 175, 80));
-
-        panel.add(leftPanel, BorderLayout.WEST);
-        panel.add(amountLabel, BorderLayout.EAST);
-
+        amountLabel.setForeground(new Color(76, 175, 80)); // green for income
+    
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(cardColor);
+        content.add(leftPanel, BorderLayout.CENTER);
+        content.add(amountLabel, BorderLayout.EAST);
+    
+        panel.add(content, BorderLayout.CENTER);
+    
         panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         panel.addMouseListener(new MouseAdapter() {
             @Override
@@ -261,12 +270,11 @@ public class HomeView {
                 cardLayout.show(contentPanel, "IncomeDetails");
             }
         });
-
+    
         return panel;
-    }
+    }    
 
     public void refresh() {
         updateView();
     }
-    
 }

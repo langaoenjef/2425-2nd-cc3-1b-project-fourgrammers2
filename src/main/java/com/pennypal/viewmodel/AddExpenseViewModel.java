@@ -1,6 +1,6 @@
 package main.java.com.pennypal.viewmodel;
 
-import main.java.com.pennypal.model.*;
+import main.java.com.pennypal.model.Expense;
 
 public class AddExpenseViewModel {
     private final HomeViewModel homeViewModel;
@@ -9,8 +9,8 @@ public class AddExpenseViewModel {
         this.homeViewModel = homeViewModel;
     }
 
-    public void addExpense(String name, double amount, String date, String category, String description) {
-        Expense expense = new Expense(name, amount, date, category, description);
+    public void addExpense(String name, double amount, String date, String time, String category, String description) {
+        Expense expense = new Expense(name, amount, date, time, category, description);
         homeViewModel.addExpense(expense);
     }
 }

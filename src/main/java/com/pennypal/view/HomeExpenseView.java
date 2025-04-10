@@ -10,7 +10,7 @@ import main.java.com.pennypal.model.Expense;
 public class HomeExpenseView {
     private JPanel panel;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "PH"));
-    private JLabel nameLabel, dateLabel, amountLabel;
+    private JLabel nameLabel, categoryLabel, dateLabel, timeLabel, amountLabel, descriptionLabel;
 
     public HomeExpenseView(CardLayout cardLayout, JPanel contentPanel, HomeViewModel viewModel,
                            Color primaryColor, Color accentColor, Color textColor, Color darkTextColor,
@@ -26,15 +26,32 @@ public class HomeExpenseView {
         nameLabel.setForeground(darkTextColor);
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        categoryLabel = new JLabel();
+        categoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        categoryLabel.setForeground(darkTextColor);
+        categoryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         dateLabel = new JLabel();
         dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
         dateLabel.setForeground(darkTextColor);
         dateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        timeLabel = new JLabel(); // NEW TIME LABEL
+        timeLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        timeLabel.setForeground(darkTextColor);
+        timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         amountLabel = new JLabel();
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
         amountLabel.setForeground(new Color(244, 67, 54));
         amountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        descriptionLabel = new JLabel();
+        descriptionLabel.setFont(new Font("SansSerif", Font.ITALIC, 16));
+        descriptionLabel.setForeground(darkTextColor);
+        descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        descriptionLabel.setMaximumSize(new Dimension(300, 100));
+        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         JButton backButton = new JButton("← Back");
         backButton.setBackground(primaryDark);
@@ -46,9 +63,15 @@ public class HomeExpenseView {
 
         panel.add(nameLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(categoryLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(dateLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(timeLabel); // Show Time
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(amountLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(descriptionLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
         panel.add(backButton);
     }
@@ -58,8 +81,12 @@ public class HomeExpenseView {
         Expense expense = viewModel.getSelectedExpense();
         if (expense != null) {
             nameLabel.setText(expense.getName());
+            categoryLabel.setText("Category: " + expense.getCategory());
             dateLabel.setText("Date: " + expense.getDate());
+            timeLabel.setText("Time: " + (expense.getTime() == null || expense.getTime().isEmpty() ? "N/A" : expense.getTime()));
             amountLabel.setText("Amount: " + currencyFormat.format(expense.getAmount()));
+            descriptionLabel.setText("<html><div style='text-align: center;'>Description: " + 
+                                     (expense.getDescription().isEmpty() ? "None" : expense.getDescription()) + "</div></html>");
         }
     }
 

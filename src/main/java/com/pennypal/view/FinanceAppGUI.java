@@ -1,43 +1,44 @@
 package main.java.com.pennypal.view;
 
-import javax.swing.*;
-
 import main.java.com.pennypal.viewmodel.HomeViewModel;
 import main.java.com.pennypal.storage.StorageManager;
+
+import javax.swing.*;
 import java.awt.*;
 
 public class FinanceAppGUI {
     private JFrame frame;
     private JPanel contentPanel;
     private CardLayout cardLayout;
-    private HomeView homeView; // 🔁 Store reference to HomeView
+    private HomeView homeView;
 
     public FinanceAppGUI() {
-        frame = new JFrame("Penny - Expense Tracker");
+        frame = new JFrame("PennyPal");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(360, 640);
-        frame.setLayout(new BorderLayout());
+        frame.setSize(400, 700);
+        frame.setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        // Shared color palette
-        Color primaryColor = new Color(98, 0, 238);
-        Color primaryDark = new Color(69, 39, 123);
-        Color primaryLight = new Color(225, 190, 231);
-        Color accentColor = new Color(255, 111, 0);
+        // Colors from original Main
+        Color primaryColor = new Color(33, 150, 243);
+        Color accentColor = new Color(255, 193, 7);
         Color textColor = Color.WHITE;
         Color darkTextColor = new Color(33, 33, 33);
         Color backgroundColor = new Color(250, 250, 250);
         Color cardColor = Color.WHITE;
         Color dividerColor = new Color(224, 224, 224);
+        Color primaryDark = new Color(25, 118, 210);
+        Color primaryLight = new Color(144, 202, 249);
 
-        // Create view model and load data
+        // ViewModel & Data
         HomeViewModel homeViewModel = new HomeViewModel();
         StorageManager.load(homeViewModel);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> StorageManager.save(homeViewModel)));
 
-        // Create views
-        homeView = new HomeView(cardLayout, contentPanel, homeViewModel, // 🔁 stored
+        // Views
+        homeView = new HomeView(cardLayout, contentPanel, homeViewModel,
                 primaryColor, accentColor, textColor, darkTextColor,
                 backgroundColor, cardColor, dividerColor, primaryDark);
 
@@ -51,33 +52,36 @@ public class FinanceAppGUI {
         HomeAddIncomeView addIncomeView = new HomeAddIncomeView(
                 cardLayout, contentPanel, homeViewModel,
                 primaryColor, accentColor, textColor, darkTextColor,
-                backgroundColor, cardColor, dividerColor, primaryDark
-        );
+                backgroundColor, cardColor, dividerColor, primaryDark);
 
         HomeAddExpenseView addExpenseView = new HomeAddExpenseView(
                 cardLayout, contentPanel, homeViewModel,
                 primaryColor, accentColor, textColor, darkTextColor,
-                backgroundColor, cardColor, dividerColor, primaryDark
-        );
+                backgroundColor, cardColor, dividerColor, primaryDark);
 
         HomeSetLimitView setLimitView = new HomeSetLimitView(
                 cardLayout, contentPanel, homeViewModel,
                 primaryColor, accentColor, textColor, darkTextColor,
-                backgroundColor, cardColor, dividerColor, primaryDark
-        );
+                backgroundColor, cardColor, dividerColor, primaryDark);
 
         HomeExpenseView expenseView = new HomeExpenseView(
                 cardLayout, contentPanel, homeViewModel,
                 primaryColor, accentColor, textColor, darkTextColor,
-                backgroundColor, cardColor, dividerColor, primaryDark
-        );
+                backgroundColor, cardColor, dividerColor, primaryDark);
 
         StatisticView statisticView = new StatisticView(backgroundColor, cardColor, darkTextColor, primaryDark);
         NotificationView notificationView = new NotificationView(backgroundColor, cardColor, darkTextColor, dividerColor, accentColor);
         ScheduleView scheduleView = new ScheduleView(backgroundColor, cardColor, primaryDark, primaryColor, textColor);
         SettingsView settingsView = new SettingsView(backgroundColor, cardColor, dividerColor, darkTextColor, primaryDark);
 
-        // Add panels to CardLayout
+        // Add expense detail navigation
+        homeView.setExpenseClickListener(expense -> {
+            homeViewModel.setSelectedExpense(expense);
+            expenseView.update(homeViewModel);
+            cardLayout.show(contentPanel, "ExpenseDetails");
+        });
+
+        // Add views to layout
         contentPanel.add(homeView.getPanel(), "Home");
         contentPanel.add(addTransactionView.getPanel(), "AddOptions");
         contentPanel.add(addIncomeView.getPanel(), "AddIncome");
@@ -89,9 +93,15 @@ public class FinanceAppGUI {
         contentPanel.add(scheduleView.getPanel(), "Schedule");
         contentPanel.add(settingsView.getPanel(), "Settings");
 
-        // Add components to frame
-        frame.add(contentPanel, BorderLayout.CENTER);
-        frame.add(createNavBar(), BorderLayout.SOUTH);
+        // Show initial view
+        cardLayout.show(contentPanel, "Home");
+
+        // Layout: combine nav and views
+        JPanel rootPanel = new JPanel(new BorderLayout());
+        rootPanel.add(contentPanel, BorderLayout.CENTER);
+        rootPanel.add(createNavBar(), BorderLayout.SOUTH);
+
+        frame.setContentPane(rootPanel);
         frame.setVisible(true);
     }
 
@@ -108,23 +118,15 @@ public class FinanceAppGUI {
             button.setFocusPainted(false);
             button.setContentAreaFilled(false);
             button.setBorderPainted(false);
+            button.setToolTipText(view); // helps users understand icons
             button.addActionListener(e -> {
                 if (view.equals("Home")) {
-                    homeView.refresh(); // ✅ Refresh before showing
+                    homeView.refresh();
                 }
                 cardLayout.show(contentPanel, view);
             });
             navBar.add(button);
         }
         return navBar;
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignored) {}
-            new FinanceAppGUI();
-        });
     }
 }
