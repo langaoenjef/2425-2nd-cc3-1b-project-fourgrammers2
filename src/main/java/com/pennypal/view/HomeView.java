@@ -15,6 +15,7 @@ import main.java.com.pennypal.model.Income;
 
 public class HomeView {
     private Consumer<Expense> expenseClickListener;
+    private Consumer<Income> incomeClickListener;
 
     private JPanel panel;
     private JLabel balanceLabel;
@@ -84,6 +85,10 @@ public class HomeView {
 
     public void setExpenseClickListener(Consumer<Expense> listener) {
         this.expenseClickListener = listener;
+    }
+
+    public void setIncomeClickListener(Consumer<Income> listener) {
+        this.incomeClickListener = listener;
     }
 
     private JPanel createHomePanel() {
@@ -236,43 +241,47 @@ public class HomeView {
                 BorderFactory.createMatteBorder(0, 0, 1, 0, dividerColor),
                 new EmptyBorder(10, 10, 10, 10)
         ));
-    
+
         JLabel nameLabel = new JLabel(income.getName());
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         nameLabel.setForeground(darkTextColor);
-    
-        JLabel subLabel = new JLabel(income.getDate());  // only date
+
+        JLabel subLabel = new JLabel(income.getDate());
         subLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subLabel.setForeground(darkTextColor);
-    
+
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(cardColor);
         leftPanel.add(nameLabel);
         leftPanel.add(subLabel);
-    
+
         JLabel amountLabel = new JLabel(currencyFormat.format(income.getAmount()));
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        amountLabel.setForeground(new Color(76, 175, 80)); // green for income
-    
+        amountLabel.setForeground(new Color(76, 175, 80));
+
         JPanel content = new JPanel(new BorderLayout());
         content.setBackground(cardColor);
         content.add(leftPanel, BorderLayout.CENTER);
         content.add(amountLabel, BorderLayout.EAST);
-    
+
         panel.add(content, BorderLayout.CENTER);
-    
+
         panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                viewModel.setSelectedIncome(income);
-                cardLayout.show(contentPanel, "IncomeDetails");
+                if (incomeClickListener != null) {
+                    incomeClickListener.accept(income);
+                } else {
+                    viewModel.setSelectedIncome(income);
+                    cardLayout.show(contentPanel, "IncomeDetails");
+                }
             }
         });
-    
+
         return panel;
-    }    
+    }
 
     public void refresh() {
         updateView();

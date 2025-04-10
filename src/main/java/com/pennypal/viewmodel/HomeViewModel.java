@@ -25,7 +25,6 @@ public class HomeViewModel {
         this.data = other.data;
         this.selectedExpense = other.selectedExpense;
     }
-    
 
     public HomeViewModel() {
         loadData();
@@ -36,7 +35,7 @@ public class HomeViewModel {
 
     public HomeViewModel(Home data) {
         this.data = (data != null) ? data : new Home();
-    }    
+    }
 
     public Home getData() {
         return data;
@@ -47,10 +46,10 @@ public class HomeViewModel {
     }
 
     public void addIncome(Income income) {
-        data.getIncomes().add(0, income); // 🔁 add at index 0
+        data.getIncomes().add(0, income);
         data.setBalance(data.getBalance() + income.getAmount());
         saveData();
-    }    
+    }
 
     public void addIncome(double amount, String date) {
         Income income = new Income(amount, date);
@@ -62,22 +61,22 @@ public class HomeViewModel {
         data.getExpenses().add(0, expense);
         data.setBalance(data.getBalance() - amount);
         saveData();
-    }    
+    }
 
     public void addExpense(Expense expense) {
         data.getExpenses().add(0, expense);
         data.setBalance(data.getBalance() - expense.getAmount());
         saveData();
-    }    
+    }
 
     public List<Expense> getRecentExpenses() {
-        return data.getExpenses(); // returns all expenses in order
+        return data.getExpenses();
     }
-    
+
     public List<Income> getRecentIncomes() {
-        return data.getIncomes(); // returns all incomes in order
+        return data.getIncomes();
     }
-    
+
     public void setLimit(Limit limit) {
         data.setLimit(limit);
         saveData();
@@ -127,7 +126,7 @@ public class HomeViewModel {
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-    
+
     public double getTotalExpenseThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
@@ -143,7 +142,7 @@ public class HomeViewModel {
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-    
+
     public double getTotalExpenseThisMonth() {
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
@@ -159,7 +158,7 @@ public class HomeViewModel {
                 .mapToDouble(Expense::getAmount)
                 .sum();
     }
-    
+
     public double getTotalIncomeToday() {
         LocalDate today = LocalDate.now();
         return data.getIncomes().stream()
@@ -173,7 +172,7 @@ public class HomeViewModel {
                 .mapToDouble(Income::getAmount)
                 .sum();
     }
-    
+
     public double getTotalIncomeThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
@@ -189,7 +188,7 @@ public class HomeViewModel {
                 .mapToDouble(Income::getAmount)
                 .sum();
     }
-    
+
     public double getTotalIncomeThisMonth() {
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
@@ -204,7 +203,7 @@ public class HomeViewModel {
                 })
                 .mapToDouble(Income::getAmount)
                 .sum();
-    }    
+    }
 
     public void setSelectedIncome(Income income) {
         data.setSelectedIncome(income);
@@ -214,6 +213,23 @@ public class HomeViewModel {
     public Income getSelectedIncome() {
         return data.getSelectedIncome();
     }
+
+    public void deleteSelectedIncome() {
+        Income selected = data.getSelectedIncome();
+        if (selected != null && data.getIncomes().remove(selected)) {
+            data.setBalance(data.getBalance() - selected.getAmount());
+            data.setSelectedIncome(null);
+            saveData();
+        }
+    }
+
+    public void deleteSelectedExpense() {
+        if (selectedExpense != null && data.getExpenses().remove(selectedExpense)) {
+            data.setBalance(data.getBalance() + selectedExpense.getAmount());
+            selectedExpense = null;
+            saveData();
+        }
+    }    
 
     private void saveData() {
         try (FileWriter writer = new FileWriter(DATA_FILE)) {

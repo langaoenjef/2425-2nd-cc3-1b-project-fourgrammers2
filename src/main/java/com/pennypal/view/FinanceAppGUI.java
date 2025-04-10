@@ -2,6 +2,7 @@ package main.java.com.pennypal.view;
 
 import main.java.com.pennypal.viewmodel.HomeViewModel;
 import main.java.com.pennypal.storage.StorageManager;
+import main.java.com.pennypal.view.HomeIncomeView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -69,6 +70,11 @@ public class FinanceAppGUI {
                 primaryColor, accentColor, textColor, darkTextColor,
                 backgroundColor, cardColor, dividerColor, primaryDark);
 
+        HomeIncomeView incomeView = new HomeIncomeView(
+                cardLayout, contentPanel, homeViewModel,
+                primaryColor, accentColor, textColor, darkTextColor,
+                backgroundColor, cardColor, dividerColor, primaryDark);
+
         StatisticView statisticView = new StatisticView(backgroundColor, cardColor, darkTextColor, primaryDark);
         NotificationView notificationView = new NotificationView(backgroundColor, cardColor, darkTextColor, dividerColor, accentColor);
         ScheduleView scheduleView = new ScheduleView(backgroundColor, cardColor, primaryDark, primaryColor, textColor);
@@ -81,6 +87,13 @@ public class FinanceAppGUI {
             cardLayout.show(contentPanel, "ExpenseDetails");
         });
 
+        // Add income detail navigation
+        homeView.setIncomeClickListener(income -> {
+            homeViewModel.setSelectedIncome(income);
+            incomeView.update(homeViewModel);
+            cardLayout.show(contentPanel, "IncomeDetails");
+        });
+
         // Add views to layout
         contentPanel.add(homeView.getPanel(), "Home");
         contentPanel.add(addTransactionView.getPanel(), "AddOptions");
@@ -88,6 +101,7 @@ public class FinanceAppGUI {
         contentPanel.add(addExpenseView.getPanel(), "AddExpense");
         contentPanel.add(setLimitView.getPanel(), "SetLimit");
         contentPanel.add(expenseView.getPanel(), "ExpenseDetails");
+        contentPanel.add(incomeView, "IncomeDetails"); // now this works!
         contentPanel.add(statisticView.getPanel(), "Statistics");
         contentPanel.add(notificationView.getPanel(), "Notification");
         contentPanel.add(scheduleView.getPanel(), "Schedule");

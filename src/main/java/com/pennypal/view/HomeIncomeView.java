@@ -6,21 +6,19 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 import main.java.com.pennypal.viewmodel.HomeViewModel;
-import main.java.com.pennypal.model.Expense;
+import main.java.com.pennypal.model.Income;
 
-public class HomeExpenseView {
-    private JPanel panel;
+public class HomeIncomeView extends JPanel {
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "PH"));
-    private JLabel nameLabel, dateLabel, timeLabel, amountLabel, categoryLabel, descriptionLabel;
+    private JLabel nameLabel, dateLabel, timeLabel, amountLabel, descriptionLabel;
 
-    public HomeExpenseView(CardLayout cardLayout, JPanel contentPanel, HomeViewModel viewModel,
+    public HomeIncomeView(CardLayout cardLayout, JPanel contentPanel, HomeViewModel viewModel,
                           Color primaryColor, Color accentColor, Color textColor, Color darkTextColor,
                           Color backgroundColor, Color cardColor, Color dividerColor, Color primaryDark) {
 
-        panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(backgroundColor);
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(backgroundColor);
+        setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         nameLabel = new JLabel();
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
@@ -39,13 +37,8 @@ public class HomeExpenseView {
 
         amountLabel = new JLabel();
         amountLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        amountLabel.setForeground(new Color(244, 67, 54)); // red for expenses
+        amountLabel.setForeground(new Color(76, 175, 80)); // green for income
         amountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        categoryLabel = new JLabel();
-        categoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        categoryLabel.setForeground(darkTextColor);
-        categoryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         descriptionLabel = new JLabel();
         descriptionLabel.setFont(new Font("SansSerif", Font.ITALIC, 16));
@@ -61,7 +54,7 @@ public class HomeExpenseView {
         deleteButton.setFont(new Font("SansSerif", Font.BOLD, 16));
         deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         deleteButton.addActionListener(e -> {
-            viewModel.deleteSelectedExpense();
+            viewModel.deleteSelectedIncome();
             cardLayout.show(contentPanel, "Home");
         });
 
@@ -73,37 +66,30 @@ public class HomeExpenseView {
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backButton.addActionListener(e -> cardLayout.show(contentPanel, "Home"));
 
-        panel.add(nameLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(dateLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(timeLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(amountLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(categoryLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(descriptionLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
-        panel.add(deleteButton);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(backButton);
+        add(nameLabel);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(dateLabel);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(timeLabel);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(amountLabel);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(descriptionLabel);
+        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(deleteButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(backButton);
     }
 
     public void update(HomeViewModel viewModel) {
-        Expense expense = viewModel.getSelectedExpense();
-        if (expense != null) {
-            nameLabel.setText(expense.getName());
-            dateLabel.setText("Date: " + expense.getDate());
-            timeLabel.setText("Time: " + (expense.getTime() == null || expense.getTime().isEmpty() ? "N/A" : expense.getTime()));
-            amountLabel.setText("Amount: " + currencyFormat.format(expense.getAmount()));
-            categoryLabel.setText("Category: " + (expense.getCategory().isEmpty() ? "None" : expense.getCategory()));
-            descriptionLabel.setText("<html><div style='text-align: center;'>Description: " +
-                    (expense.getDescription().isEmpty() ? "None" : expense.getDescription()) + "</div></html>");
+        Income income = viewModel.getSelectedIncome();
+        if (income != null) {
+            nameLabel.setText(income.getName());
+            dateLabel.setText("Date: " + income.getDate());
+            timeLabel.setText("Time: " + (income.getTime() == null || income.getTime().isEmpty() ? "N/A" : income.getTime()));
+            amountLabel.setText("Amount: " + currencyFormat.format(income.getAmount()));
+            descriptionLabel.setText("<html><div style='text-align: center;'>Description: " + 
+                                     (income.getDescription().isEmpty() ? "None" : income.getDescription()) + "</div></html>");
         }
-    }
-
-    public JPanel getPanel() {
-        return panel;
     }
 }
