@@ -1,0 +1,20 @@
+{
+  "balance": 888000.0,
+  "expenses": [
+    {
+      "name": "Food",
+      "amount": 500.0,
+      "date": "2025-04-11"
+    },
+    {
+      "name": "Food",
+      "amount": 500.0,
+      "date": "2025-04-11"
+    },
+    {
+      "name": "Food",
+      "amount": 500.0,
+      "date": "2025-04-11"
+    }
+  ]
+}
