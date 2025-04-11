@@ -1,1 +1,1 @@
-This is the package used to present PennyPal on Demo Day.
+This is the folder used to present PennyPal on Demo Day.
